@@ -12,7 +12,6 @@ const props = defineProps({
 })
 
 const goToHistory = function(){
-  console.log(props.entry.type)
   router.push({
     path: `/history/${props.entry.type}`
   })

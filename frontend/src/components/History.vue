@@ -57,7 +57,6 @@
       }).catch((error) => {
           console.error('Error:', error);
       }).then(r => r.json());
-      console.log('res:', response)
       sensorData.value = response.data;
       pagination.nextPage = response.nextPage ? parseInt(response.nextPage.split('=')[1], 10) : null;
       pagination.currentPage = page;

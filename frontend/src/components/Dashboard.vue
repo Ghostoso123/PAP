@@ -32,7 +32,7 @@ async function getData(){
         if(entry.type=="pressao" || entry.type=="pressure"){
             return {
                 type: entry.type,
-                label: "Pressure",
+                label: "Pressão",
                 value: entry.value,
                 valueLabel: "hPa"
             }
@@ -45,7 +45,7 @@ async function getData(){
                 valueLabel: "m"
             }
         }
-        console.log("There seems to be a data type that the front does not  accept")
+        console.log("There seems to be a data type that the front does not  accept");
     }).filter((entry)=> entry != undefined && entry != null)
     .forEach(element => {
         const { type, timestamp } = element;
