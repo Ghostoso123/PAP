@@ -123,9 +123,9 @@ app.get('/weather-data/latest', async (req, res) => {
   try {
     // Query to get the latest entry for each type
     const result = await client.query(`
-      SELECT DISTINCT ON (type) *
+      SELECT DISTINCT ON ("DataType") *
       FROM "WeatherData"
-      ORDER BY type, timestamp DESC
+      ORDER BY "DataType", "Timestamp" DESC;
     `);
 
     res.status(200).json({
@@ -154,7 +154,7 @@ app.get('/weather-data/:type', async (req, res) => {
     const nextPage = (offset + parseInt(limit)) < totalCount ? parseInt(page) + 1 : null;
     const nextPageLink = nextPage ? `${req.protocol}://${req.get('host')}/weather-data/${type}?page=${nextPage}&limit=${limit}` : null;
 
-    res.json({
+    res.status(200).json({
       data: result.rows.map(fromSQLObject),
       nextPage: nextPageLink
     });
