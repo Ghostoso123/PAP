@@ -109,9 +109,9 @@ app.get('/weather-data', async (req, res) => {
       data: result.rows.map(fromSQLObject),
       nextPage: nextPageLink
     });
-  } catch (err) {
-    console.error('Error retrieving data:', err);
-    res.status(500).json({ error: 'Error retrieving data' });
+  } catch (error) {
+    console.error('Error retrieving data:', error);
+    res.status(500).json({ message: 'Error retrieving data', error });
   } finally {
     client.release();
   }
@@ -131,9 +131,9 @@ app.get('/weather-data/latest', async (req, res) => {
     res.status(200).json({
       data: result.rows.map(fromSQLObject)
     });
-  } catch (err) {
-    console.error('Error retrieving latest data:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+  } catch (error) {
+    console.error('Error retrieving latest data:', error);
+    res.status(500).json({ message: 'Internal Server Error', error });
   } finally {
     client.release();
   }
@@ -158,9 +158,9 @@ app.get('/weather-data/:type', async (req, res) => {
       data: result.rows.map(fromSQLObject),
       nextPage: nextPageLink
     });
-  } catch (err) {
-    console.error('Error retrieving data:', err);
-    res.status(500).json({ error: 'Error retrieving data' });
+  } catch (error) {
+    console.error('Error retrieving data:', error);
+    res.status(500).json({ message: 'Error retrieving data', error });
   } finally {
     client.release();
   }
