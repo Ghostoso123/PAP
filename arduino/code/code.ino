@@ -1,37 +1,30 @@
 #include <Wire.h>
 #include <Adafruit_BMP280.h>
-#include <WiFiClient.h>
+#include <WiFiClientSecure.h>
 #include <Adafruit_Sensor.h>
-
 #include <HTTPClient.h>
 #include <WiFi.h>
-
-
-
-
 
 Adafruit_BMP280 bmp;
 
 // WiFi parameters to be configured
 const char* ssid = "Tiago";
 const char* password = "12345678";
-const char* serverName = "http://pap-a0bx.onrender.com/";
+
+const char* server = "https://pap-a0bx.onrender.com";
 
 unsigned long lastTime = 0;
 unsigned long timerDelay = 5000;
 
 const String DEVICE_CODE = "ESP32-WROOM-32E";
 
-void setup(void)
-{ 
+void setup(void) { 
   Serial.begin(9600);
   Serial.println("Just Starting...");
 
-
- if (!bmp.begin(0x76)) { // Endereço I2C padrão do BMP280
+  if (!bmp.begin(0x76)) { // Endereço I2C padrão do BMP280
     Serial.println(F("Could not find a valid BMP280 sensor, check wiring!"));
     while (1);
-  
   }
 
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, /* Modo operacional. */ 
@@ -51,14 +44,9 @@ void setup(void)
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println(WiFi.localIP());
-
-
 }
 
-/**
- *  TEMPERATURE
- */
-void sendTemperature(HTTPClient *http){
+void sendTemperature(HTTPClient *http) {
   float temperature = bmp.readTemperature();
   Serial.print("Read temperature from sensor: ");
   Serial.println(temperature);
@@ -70,8 +58,15 @@ void sendTemperature(HTTPClient *http){
   int httpTemperatureResponseCode = http->POST(temperatureJson);
   Serial.print("Sent Temperature! Got Response code: ");
   Serial.println(httpTemperatureResponseCode);
-}
 
+  if (httpTemperatureResponseCode > 0) { // Check if the request was successful
+    String response = http->getString(); // Get the response payload
+    Serial.println("Response: " + response);
+  } else {
+    Serial.print("Error on sending POST: ");
+    Serial.println(httpTemperatureResponseCode);
+  }
+}
 
 /**
  *  PRESSURE
@@ -88,6 +83,14 @@ void sendPressure(HTTPClient *http){
   int httpPressureResponseCode = http->POST(pressureJson);
   Serial.print("Sent Pressure! Got Response code: ");
   Serial.println(httpPressureResponseCode);
+
+  if (httpPressureResponseCode > 0) { // Check if the request was successful
+    String response = http->getString(); // Get the response payload
+    Serial.println("Response: " + response);
+  } else {
+    Serial.print("Error on sending POST: ");
+    Serial.println(httpPressureResponseCode);
+  }
 }
 
 /**
@@ -105,44 +108,35 @@ void sendAltitude(HTTPClient *http){
   int httpAltitudeResponseCode = http->POST(altitudeJson);
   Serial.print("Sent Altitude! Got Response code: ");
   Serial.println(httpAltitudeResponseCode);
+
+  if (httpAltitudeResponseCode > 0) { // Check if the request was successful
+    String response = http->getString(); // Get the response payload
+    Serial.println("Response: " + response);
+  } else {
+    Serial.print("Error on sending POST: ");
+    Serial.println(httpAltitudeResponseCode);
+  }
 }
 
-/**
- * WindSpeed
- */
-void sendWindSpeed(HTTPClient *http){
-  float windSpeed = 10; //substiruir este 10 pela logica  de ler o sensor
-  
-  Serial.print("Read wind speed from sensor: ");
-  Serial.println(windSpeed);
-
-
-  String windSpeedJson = "{\"type\":\"wind-speed\",\"sensor\":\"" + DEVICE_CODE +  "\",\"value\":" + String(windSpeed) +"}";
-  Serial.print("Sending Wind Speed: ");
-  Serial.println(windSpeedJson);
-
-  int httpWindSpeedResponseCode = http->POST(windSpeedJson);
-  Serial.print("Sent wind speed! Got Response code: ");
-  Serial.println(httpWindSpeedResponseCode);
-}
-
-void loop(void)  
-{  
+void loop(void) {  
   if ((millis() - lastTime) > timerDelay) {
-    if(WiFi.status()== WL_CONNECTED){
-        WiFiClient client;
-        HTTPClient http;
-        
-        http.begin(client, serverName);
-        http.addHeader("Content-Type", "application/json");
+    if(WiFi.status() == WL_CONNECTED) {
+        WiFiClientSecure client;
+        client.setInsecure(); // This is only for testing purposes, use proper SSL certificates in production
 
-        sendTemperature(&http);
-        sendPressure(&http);
-        sendAltitude(&http);
-        //sendWindSpeed(&http);
-        http.end();
-    } 
-    else{
+        HTTPClient http;
+        if (http.begin(client, server)) {
+            http.addHeader("Content-Type", "application/json");
+
+            sendTemperature(&http);
+            sendAltitude(&http);
+            sendPressure(&http);
+            
+            http.end();
+        } else {
+            Serial.println("Failed to connect to server");
+        }
+    } else {
         Serial.println("Disconnected");
     }
     lastTime = millis();
