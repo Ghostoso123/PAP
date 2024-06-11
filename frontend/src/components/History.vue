@@ -20,9 +20,9 @@
         </tbody>
       </table>
       <div class="pagination flex justify-center p-2">
-        <button @click="fetchData(currentPage - 1)" :disabled="pagination.currentPage <= 1">Prev</button>
+        <button @click="fetchData(pagination.currentPage - 1)" :disabled="pagination.currentPage <= 1">Prev</button>
         <span class="mx-2">{{ pagination.currentPage }}</span>
-        <button @click="fetchData(currentPage + 1)" :disabled="!pagination.nextPage">Next</button>
+        <button @click="fetchData(pagination.currentPage + 1)" :disabled="!pagination.nextPage">Next</button>
       </div>
     </div>
   </template>
