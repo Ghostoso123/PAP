@@ -38,7 +38,7 @@ async function getData(){
             }
         }
 
-        if(entry.type=="altitude" || entry.type=="pressure"){
+        if(entry.type=="altitude"){
             return {
                 type: entry.type,
                 label: "Altitude",
