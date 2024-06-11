@@ -37,7 +37,6 @@ async function getData(){
                 valueLabel: "hPa"
             }
         }
-
         if(entry.type=="altitude"){
             return {
                 type: entry.type,
@@ -46,6 +45,7 @@ async function getData(){
                 valueLabel: "m"
             }
         }
+        console.log("There seems to be a data type that the front does not  accept")
     }).filter((entry)=> entry != undefined && entry != null)
     .forEach(element => {
         const { type, timestamp } = element;
