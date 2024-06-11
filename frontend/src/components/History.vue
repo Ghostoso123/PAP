@@ -5,9 +5,9 @@
         <thead>
           <tr>
             <th class="px-4 py-2" @click="sortBy('sensor')">Sensor</th>
-            <th class="px-4 py-2" @click="sortBy('timestamp')">Timestamp</th>
-            <th class="px-4 py-2" @click="sortBy('type')">Type</th>
-            <th class="px-4 py-2" @click="sortBy('value')">Value</th>
+            <th class="px-4 py-2" @click="sortBy('timestamp')">Data e Hora</th>
+            <th class="px-4 py-2" @click="sortBy('type')">Tipo</th>
+            <th class="px-4 py-2" @click="sortBy('value')">Valor</th>
           </tr>
         </thead>
         <tbody>
@@ -20,9 +20,9 @@
         </tbody>
       </table>
       <div class="pagination flex justify-center p-2">
-        <button @click="fetchData(pagination.currentPage - 1)" :disabled="pagination.currentPage <= 1">Prev</button>
+        <button @click="fetchData(pagination.currentPage - 1)" :disabled="pagination.currentPage <= 1">Anterior</button>
         <span class="mx-2">{{ pagination.currentPage }}</span>
-        <button @click="fetchData(pagination.currentPage + 1)" :disabled="!pagination.nextPage">Next</button>
+        <button @click="fetchData(pagination.currentPage + 1)" :disabled="!pagination.nextPage">Próxima</button>
       </div>
     </div>
   </template>
