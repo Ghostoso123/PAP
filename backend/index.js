@@ -99,10 +99,10 @@ app.get('/weather-data', async (req, res) => {
   const client = await pool.connect();
 
   try {
-    const totalCountResult = await client.query('SELECT COUNT(*) AS total FROM "WeatherData" ORDER BY "Timestamp" DESC;');
+    const totalCountResult = await client.query('SELECT COUNT(*) AS total FROM "WeatherData"');
     const totalCount = parseInt(totalCountResult.rows[0].total, 10);
 
-    const result = await client.query('SELECT * FROM "WeatherData" LIMIT $1 OFFSET $2', [limit, offset]);
+    const result = await client.query('SELECT * FROM "WeatherData" ORDER BY "Timestamp" DESC LIMIT $1 OFFSET $2', [limit, offset]);
     const nextPage = (offset + parseInt(limit)) < totalCount ? parseInt(page) + 1 : null;
     const nextPageLink = nextPage ? `${req.protocol}://${req.get('host')}/weather-data?page=${nextPage}&limit=${limit}` : null;
     res.status(200).json({
@@ -147,10 +147,10 @@ app.get('/weather-data/:type', async (req, res) => {
   const client = await pool.connect();
 
   try {
-    const totalCountResult = await client.query('SELECT COUNT(*) AS total FROM "WeatherData" WHERE "DataType" = $1 ORDER BY "Timestamp" DESC;', [type]);
+    const totalCountResult = await client.query('SELECT COUNT(*) AS total FROM "WeatherData" WHERE "DataType" = $1', [type]);
     const totalCount = parseInt(totalCountResult.rows[0].total, 10);
 
-    const result = await client.query('SELECT * FROM "WeatherData" WHERE "DataType" = $1 LIMIT $2 OFFSET $3', [type, limit, offset]);
+    const result = await client.query('SELECT * FROM "WeatherData" WHERE "DataType" = $1 ORDER BY "Timestamp" DESC LIMIT $2 OFFSET $3', [type, limit, offset]);
     const nextPage = (offset + parseInt(limit)) < totalCount ? parseInt(page) + 1 : null;
     const nextPageLink = nextPage ? `${req.protocol}://${req.get('host')}/weather-data/${type}?page=${nextPage}&limit=${limit}` : null;
 
