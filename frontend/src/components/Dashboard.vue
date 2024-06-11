@@ -4,7 +4,7 @@ import { ref } from 'vue'
 const data = ref([])
 
 async function getData(){
-    const newData = await fetch(`${import.meta.env.VITE_API_URL}/weather-data`, {
+    const newData = await fetch(`${import.meta.env.VITE_API_URL}/weather-data/latest`, {
         headers: {
       "Accept": "*/*",
         }

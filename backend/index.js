@@ -90,7 +90,7 @@ app.post('/', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send(`Welcome to Tiago's Weather Data API. Send a POST request to / with the data you want to store. or to see the data stored, send a GET request to /weather-data.`);
+  res.status(200).send(`Welcome to Tiago's Weather Data API. Send a POST request to / with the data you want to store. or to see the data stored, send a GET request to /weather-data.`);
 });
 
 app.get('/weather-data', async (req, res) => {
@@ -105,7 +105,7 @@ app.get('/weather-data', async (req, res) => {
     const result = await client.query('SELECT * FROM "WeatherData" LIMIT $1 OFFSET $2', [limit, offset]);
     const nextPage = (offset + parseInt(limit)) < totalCount ? parseInt(page) + 1 : null;
     const nextPageLink = nextPage ? `${req.protocol}://${req.get('host')}/weather-data?page=${nextPage}&limit=${limit}` : null;
-    res.json({
+    res.status(200).json({
       data: result.rows.map(fromSQLObject),
       nextPage: nextPageLink
     });
@@ -116,6 +116,29 @@ app.get('/weather-data', async (req, res) => {
     client.release();
   }
 });
+
+app.get('/weather-data/latest', async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    // Query to get the latest entry for each type
+    const result = await client.query(`
+      SELECT DISTINCT ON (type) *
+      FROM "WeatherData"
+      ORDER BY type, timestamp DESC
+    `);
+
+    res.status(200).json({
+      data: result.rows.map(fromSQLObject)
+    });
+  } catch (err) {
+    console.error('Error retrieving latest data:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    client.release();
+  }
+});
+
 
 app.get('/weather-data/:type', async (req, res) => {
   const { type } = req.params;
