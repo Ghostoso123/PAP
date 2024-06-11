@@ -99,7 +99,7 @@ app.get('/weather-data', async (req, res) => {
   const client = await pool.connect();
 
   try {
-    const totalCountResult = await client.query('SELECT COUNT(*) AS total FROM "WeatherData"');
+    const totalCountResult = await client.query('SELECT COUNT(*) AS total FROM "WeatherData" ORDER BY "Timestamp" DESC;');
     const totalCount = parseInt(totalCountResult.rows[0].total, 10);
 
     const result = await client.query('SELECT * FROM "WeatherData" LIMIT $1 OFFSET $2', [limit, offset]);
@@ -147,7 +147,7 @@ app.get('/weather-data/:type', async (req, res) => {
   const client = await pool.connect();
 
   try {
-    const totalCountResult = await client.query('SELECT COUNT(*) AS total FROM "WeatherData" WHERE "DataType" = $1', [type]);
+    const totalCountResult = await client.query('SELECT COUNT(*) AS total FROM "WeatherData" WHERE "DataType" = $1 ORDER BY "Timestamp" DESC;', [type]);
     const totalCount = parseInt(totalCountResult.rows[0].total, 10);
 
     const result = await client.query('SELECT * FROM "WeatherData" WHERE "DataType" = $1 LIMIT $2 OFFSET $3', [type, limit, offset]);
