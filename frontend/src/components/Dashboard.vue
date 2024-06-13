@@ -45,6 +45,30 @@ async function getData(){
                 valueLabel: "m"
             }
         }
+        if(entry.type=="windspeed"){
+            return {
+                type: entry.type,
+                label: "Velocidade do Vento",
+                value: entry.value,
+                valueLabel: "m/s"
+            }
+        }
+        if(entry.type=="airquality"){
+            return {
+                type: entry.type,
+                label: "Qualidade do Ar",
+                value: entry.value,
+                valueLabel: ""
+            }
+        }
+        if(entry.type=="winddirection"){
+            return {
+                type: entry.type,
+                label: "Direção do Vento",
+                value: entry.value,
+                valueLabel: ""
+            }
+        }
         console.log("There seems to be a data type that the front does not  accept");
     }).filter((entry)=> entry != undefined && entry != null)
     .forEach(element => {
