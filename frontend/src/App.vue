@@ -11,3 +11,6 @@ const router = useRouter();
     <router-view class="pt-24 h-full w-full"/>
   </div>
 </template>
+
+
+//ent se eu quiser dar espaço aqui:
