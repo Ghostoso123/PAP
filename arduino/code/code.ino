@@ -9,13 +9,21 @@
 #define DHTPIN 15  // Pino ao qual o sensor está conectado
 #define DHTTYPE DHT22  // Defina o tipo do sensor DHT22 (AM2302)
 
+#define ReedSwitch_1 33
+#define ReedSwitch_2 25
+#define ReedSwitch_3 26
+#define ReedSwitch_4 27
+
 DHT dht(DHTPIN, DHTTYPE);
 
 const int gasSensorPin = 27; // Pino analógico onde o sensor está conectado
 const int buzzerPin = 26; // Pino digital onde o buzzer está conectado
 const int threshold = 4000; // Limite de detecção de gás, ajuste conforme necessário
+const int hallPin = 2; // Pino onde o sensor de efeito Hall está conectado
+
 
 Adafruit_BMP280 bmp;
+
 
 // WiFi parameters to be configured
 const char* ssid = "Tiago";
@@ -23,10 +31,16 @@ const char* password = "12345678";
 
 const char* server = "https://pap-a0bx.onrender.com";
 
+const String DEVICE_CODE = "ESP32-WROOM-32E";
+
+
 unsigned long lastTime = 0;
 unsigned long timerDelay = 5000;
 
-const String DEVICE_CODE = "ESP32-WROOM-32E";
+
+volatile int pulseCount = 0; // Contador de pulsos
+const float calibrationFactor = 1.2; // Ajuste conforme necessário
+
 
 void setup(void) { 
   Serial.begin(9600);
@@ -57,124 +71,55 @@ void setup(void) {
 
   pinMode(gasSensorPin, INPUT);
   pinMode(buzzerPin, OUTPUT);
+  pinMode(ReedSwitch_1, INPUT);
+  pinMode(ReedSwitch_2, INPUT);
+  pinMode(ReedSwitch_3, INPUT);
+  pinMode(ReedSwitch_4, INPUT);
+  pinMode(hallPin, INPUT); // Define o pino do sensor como entrada
 }
 
+void countPulse() { pulseCount++; } // O incremento tem que ser uma callback function para o attachInterrupt
+
 // TEMPERATURA
-void sendTemperature(HTTPClient *http) {
+char* readTemperature() {
   float temperature = bmp.readTemperature();
   Serial.print("Read temperature from sensor: ");
   Serial.println(temperature);
-
-  String temperatureJson = "{\"type\":\"temperature\",\"sensor\":\"" + DEVICE_CODE +  "\",\"value\":" + String(temperature) +"}";
-  Serial.print("Sending temperature: ");
-  Serial.println(temperatureJson);
-
-  int httpTemperatureResponseCode = http->POST(temperatureJson);
-  Serial.print("Sent Temperature! Got Response code: ");
-  Serial.println(httpTemperatureResponseCode);
-
-  if (httpTemperatureResponseCode > 0) { // Check if the request was successful
-    String response = http->getString(); // Get the response payload
-    Serial.println("Response: " + response);
-  } else {
-    Serial.print("Error on sending POST: ");
-    Serial.println(httpTemperatureResponseCode);
-  }
+  return String(temperature);
 }
 
 // UMIDADE RELATIVA
 
-void sendHumidity(HTTPClient *http) {
+char* readHumidity() {
   float humidity = dht.readHumidity();
   Serial.print("Read humidity from sensor: ");
   Serial.println(humidity);
-
-  String humidityJson = "{\"type\":\"humidity\",\"sensor\":\"" + DEVICE_CODE +  "\",\"value\":" + String(humidity) +"}";
-  Serial.print("Sending humidity: ");
-  Serial.println(humidityJson);
-
-  int httpHumidityResponseCode = http->POST(humidityJson);
-  Serial.print("Sent Humidity! Got Response code: ");
-  Serial.println(httpHumidityResponseCode);
-
-  if (httpHumidityResponseCode > 0) { // Check if the request was successful
-    String response = http->getString(); // Get the response payload
-    Serial.println("Response: " + response);
-  } else {
-    Serial.print("Error on sending POST: ");
-    Serial.println(httpHumidityResponseCode);
-  }
+  return String(humidity);
 }
 
 // PRESSÃO
-void sendPressure(HTTPClient *http) {
+char* readPressure() {
   float pressure = bmp.readPressure() / 100.0F; // Converte para hPa
   float seaLevelPressure = 1017.0; // Ajuste este valor conforme necessário
   pressure += (seaLevelPressure - 1013.25); // Ajusta com base na pressão ao nível do mar
   Serial.print("Read pressure from sensor: ");
   Serial.println(pressure);
-
-  String pressureJson = "{\"type\":\"pressure\",\"sensor\":\"" + DEVICE_CODE +  "\",\"value\":" + String(pressure) +"}";
-  Serial.print("Sending pressure: ");
-  Serial.println(pressureJson);
-
-  int httpPressureResponseCode = http->POST(pressureJson);
-  Serial.print("Sent Pressure! Got Response code: ");
-  Serial.println(httpPressureResponseCode);
-
-  if (httpPressureResponseCode > 0) { // Check if the request was successful
-    String response = http->getString(); // Get the response payload
-    Serial.println("Response: " + response);
-  } else {
-    Serial.print("Error on sending POST: ");
-    Serial.println(httpPressureResponseCode);
-  }
+  return String(pressure);
 }
 
 // ALTITUDE
-void sendAltitude(HTTPClient *http){
+char* readAltitude(){
   float altitude = bmp.readAltitude(1017.9);
   Serial.print("Read altitude from sensor: ");
   Serial.println(altitude);
-
-  String altitudeJson = "{\"type\":\"altitude\",\"sensor\":\"" + DEVICE_CODE  + "\",\"value\":" + String(altitude) +"}";
-  Serial.print("Sending altitude: ");
-  Serial.println(altitudeJson);
-
-  int httpAltitudeResponseCode = http->POST(altitudeJson);
-  Serial.print("Sent Altitude! Got Response code: ");
-  Serial.println(httpAltitudeResponseCode);
-
-  if (httpAltitudeResponseCode > 0) { // Check if the request was successful
-    String response = http->getString(); // Get the response payload
-    Serial.println("Response: " + response);
-  } else {
-    Serial.print("Error on sending POST: ");
-    Serial.println(httpAltitudeResponseCode);
-  }
+  return String(altitude);
 }
 
 // GÁS
-void sendGasLevel(HTTPClient *http) {
+char* readGasLevel() {
   int gasLevel = analogRead(gasSensorPin); // Ler valor do sensor de gás
   Serial.print("Read gas level from sensor: ");
   Serial.println(gasLevel);
-
-  String gasJson = "{\"type\":\"gas\",\"sensor\":\"" + DEVICE_CODE +  "\",\"value\":" + String(gasLevel) +"}";
-  Serial.print("Sending gas level: ");
-  Serial.println(gasJson);
-
-  int httpGasResponseCode = http->POST(gasJson);
-  Serial.print("Sent Gas Level! Got Response code: ");
-  Serial.println(httpGasResponseCode);
-
-  if (httpGasResponseCode > 0) { // Check if the request was successful
-    String response = http->getString(); // Get the response payload
-    Serial.println("Response: " + response);
-  } else {
-    Serial.print("Error on sending POST: ");
-    Serial.println(httpGasResponseCode);
-  }
 
   if (gasLevel > threshold) { // Se o nível de gás ultrapassar o limite
     // Emitir som alternado no buzzer
@@ -189,6 +134,71 @@ void sendGasLevel(HTTPClient *http) {
   } else {
     noTone(buzzerPin); // Desligar o buzzer se o nível de gás estiver abaixo do limite
   }
+  return String(gasLevel);
+}
+
+// Wind direction
+char* readWindDirection(){
+
+  int estadoReedSwitch1 = digitalRead(ReedSwitch_1);
+  int estadoReedSwitch2 = digitalRead(ReedSwitch_2);
+  int estadoReedSwitch3 = digitalRead(ReedSwitch_3);
+  int estadoReedSwitch4 = digitalRead(ReedSwitch_4);
+
+  if (estadoReedSwitch1 == HIGH) {
+    Serial.println("Direção detetada: Norte");
+    return "Norte";
+  }
+  if (estadoReedSwitch2 == HIGH) {
+    Serial.println("Direção detetada: Oeste");
+    return "Oeste";
+  }
+  if (estadoReedSwitch3 == HIGH) {
+    Serial.println("Direção detetada: Sul");
+    return "Sul";
+  }
+  if (estadoReedSwitch4 == HIGH) {
+    Serial.println("Direção detetada: Este");
+    return "Este";
+  }
+  return "";
+}
+
+// Wind speed
+char* readWindSpeed(unsigned long lastTime){
+  unsigned long currentTime = millis(); // Tempo atual
+  float windSpeed = 0.0;
+
+  detachInterrupt(digitalPinToInterrupt(hallPin)); // Desativa a interrupção para calcular a velocidade
+  windSpeed = (pulseCount / (timerDelay / 1000.0)) * calibrationFactor; // Calcula a velocidade do vento em m/s
+  pulseCount = 0; // Reseta o contador de pulsos
+  attachInterrupt(digitalPinToInterrupt(hallPin), countPulse, FALLING); // Reativa a interrupção
+
+  if(windSpeed >= 0){
+    return String(windSpeed);
+  }
+  return "";
+}
+
+
+void sendData(HTTPClient *http, char* type, char* value) {
+  if(value == "") { return; }
+
+  String jsonPayload = "{\"type\":\"" + type + "\",\"sensor\":\"" + DEVICE_CODE  + "\",\"value\":" + value +"}";
+  Serial.print("Sending " + type +": ");
+  Serial.println(jsonPayload);
+
+  int httpResponseCode = http->POST(jsonPayload);
+  Serial.print("Sent " + type + "! Got Response code: ");
+  Serial.println(httpResponseCode);
+
+  if (httpResponseCode > 0) {
+    String response = http->getString();
+    Serial.println("Response: " + response);
+  } else {
+    Serial.print("Error on sending POST: ");
+    Serial.println(httpResponseCode);
+  }
 }
 
 void loop(void) {  
@@ -201,12 +211,13 @@ void loop(void) {
         if (http.begin(client, server)) {
             http.addHeader("Content-Type", "application/json");
 
-            sendTemperature(&http);
-            sendAltitude(&http);
-            sendPressure(&http);
-            sendHumidity(&http);
-            sendGasLevel(&http);
-            sendGasLevel(&http, "altitude", bmp.readAltidude);
+            sendData(&http, "altitude", readAltitude());
+            sendData(&http, "temperature", readTemperature());
+            sendData(&http, "pressure", readPressure());
+            sendData(&http, "humidity", readHumidity());
+            sendData(&http, "air_quality", readGasLevel());
+            sendData(&http, "wind_direction", readWindDirection());
+            sendData(&http, "wind_speed", readWindSpeed(lastTime));
 
             http.end();
         } else {
