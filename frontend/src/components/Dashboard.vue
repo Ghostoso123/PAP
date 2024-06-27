@@ -45,7 +45,7 @@ async function getData(){
                 valueLabel: "m"
             }
         }
-        if(entry.type=="windspeed"){
+        if(entry.type=="wind_speed"){
             return {
                 type: entry.type,
                 label: "Velocidade do Vento",
@@ -53,7 +53,7 @@ async function getData(){
                 valueLabel: "m/s"
             }
         }
-        if(entry.type=="airquality"){
+        if(entry.type=="air_quality"){
             return {
                 type: entry.type,
                 label: "Qualidade do Ar",
@@ -61,7 +61,7 @@ async function getData(){
                 valueLabel: ""
             }
         }
-        if(entry.type=="winddirection"){
+        if(entry.type=="wind_direction"){
             return {
                 type: entry.type,
                 label: "Direção do Vento",
@@ -86,8 +86,8 @@ getData()
 
 </script>
 <template lang="">
-    <div class="flex justify-center p-4">
-        <div class="w-1/2 flex flex-col mt-24">
+    <div class="flex justify-center p-4 overflow-scroll box-border">
+        <div class="flex flex-col flex-wrap sm:min-w-[620px] m-auto box-border">
             <Card v-for="entry in data" :entry="entry" class="m-4"/>
         </div>
     </div>
