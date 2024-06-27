@@ -4,6 +4,16 @@
 #include <Adafruit_Sensor.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#include "DHT.h"
+
+#define DHTPIN 15  // Pino ao qual o sensor está conectado
+#define DHTTYPE DHT22  // Defina o tipo do sensor DHT22 (AM2302)
+
+DHT dht(DHTPIN, DHTTYPE);
+
+const int gasSensorPin = 27; // Pino analógico onde o sensor está conectado
+const int buzzerPin = 26; // Pino digital onde o buzzer está conectado
+const int threshold = 4000; // Limite de detecção de gás, ajuste conforme necessário
 
 Adafruit_BMP280 bmp;
 
@@ -44,8 +54,12 @@ void setup(void) {
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println(WiFi.localIP());
+
+  pinMode(gasSensorPin, INPUT);
+  pinMode(buzzerPin, OUTPUT);
 }
 
+// TEMPERATURA
 void sendTemperature(HTTPClient *http) {
   float temperature = bmp.readTemperature();
   Serial.print("Read temperature from sensor: ");
@@ -68,11 +82,35 @@ void sendTemperature(HTTPClient *http) {
   }
 }
 
-/**
- *  PRESSURE
- */
-void sendPressure(HTTPClient *http){
-  float pressure = bmp.readPressure();
+// UMIDADE RELATIVA
+
+void sendHumidity(HTTPClient *http) {
+  float humidity = dht.readHumidity();
+  Serial.print("Read humidity from sensor: ");
+  Serial.println(humidity);
+
+  String humidityJson = "{\"type\":\"humidity\",\"sensor\":\"" + DEVICE_CODE +  "\",\"value\":" + String(humidity) +"}";
+  Serial.print("Sending humidity: ");
+  Serial.println(humidityJson);
+
+  int httpHumidityResponseCode = http->POST(humidityJson);
+  Serial.print("Sent Humidity! Got Response code: ");
+  Serial.println(httpHumidityResponseCode);
+
+  if (httpHumidityResponseCode > 0) { // Check if the request was successful
+    String response = http->getString(); // Get the response payload
+    Serial.println("Response: " + response);
+  } else {
+    Serial.print("Error on sending POST: ");
+    Serial.println(httpHumidityResponseCode);
+  }
+}
+
+// PRESSÃO
+void sendPressure(HTTPClient *http) {
+  float pressure = bmp.readPressure() / 100.0F; // Converte para hPa
+  float seaLevelPressure = 1017.0; // Ajuste este valor conforme necessário
+  pressure += (seaLevelPressure - 1013.25); // Ajusta com base na pressão ao nível do mar
   Serial.print("Read pressure from sensor: ");
   Serial.println(pressure);
 
@@ -93,11 +131,9 @@ void sendPressure(HTTPClient *http){
   }
 }
 
-/**
- *  ALTITUDE
- */
+// ALTITUDE
 void sendAltitude(HTTPClient *http){
-  float altitude = bmp.readAltitude(1013.25);
+  float altitude = bmp.readAltitude(1017.9);
   Serial.print("Read altitude from sensor: ");
   Serial.println(altitude);
 
@@ -118,6 +154,43 @@ void sendAltitude(HTTPClient *http){
   }
 }
 
+// GÁS
+void sendGasLevel(HTTPClient *http) {
+  int gasLevel = analogRead(gasSensorPin); // Ler valor do sensor de gás
+  Serial.print("Read gas level from sensor: ");
+  Serial.println(gasLevel);
+
+  String gasJson = "{\"type\":\"gas\",\"sensor\":\"" + DEVICE_CODE +  "\",\"value\":" + String(gasLevel) +"}";
+  Serial.print("Sending gas level: ");
+  Serial.println(gasJson);
+
+  int httpGasResponseCode = http->POST(gasJson);
+  Serial.print("Sent Gas Level! Got Response code: ");
+  Serial.println(httpGasResponseCode);
+
+  if (httpGasResponseCode > 0) { // Check if the request was successful
+    String response = http->getString(); // Get the response payload
+    Serial.println("Response: " + response);
+  } else {
+    Serial.print("Error on sending POST: ");
+    Serial.println(httpGasResponseCode);
+  }
+
+  if (gasLevel > threshold) { // Se o nível de gás ultrapassar o limite
+    // Emitir som alternado no buzzer
+    tone(buzzerPin, 1000); // Emitir som de 1000 Hz
+    delay(500); // Esperar 500 ms
+    noTone(buzzerPin); // Parar o som
+    delay(500); // Esperar 500 ms
+    tone(buzzerPin, 1500); // Emitir som de 1500 Hz
+    delay(500); // Esperar 500 ms
+    noTone(buzzerPin); // Parar o som
+    delay(500); // Esperar 500 ms
+  } else {
+    noTone(buzzerPin); // Desligar o buzzer se o nível de gás estiver abaixo do limite
+  }
+}
+
 void loop(void) {  
   if ((millis() - lastTime) > timerDelay) {
     if(WiFi.status() == WL_CONNECTED) {
@@ -131,7 +204,10 @@ void loop(void) {
             sendTemperature(&http);
             sendAltitude(&http);
             sendPressure(&http);
-            
+            sendHumidity(&http);
+            sendGasLevel(&http);
+            sendGasLevel(&http, "altitude", bmp.readAltidude);
+
             http.end();
         } else {
             Serial.println("Failed to connect to server");

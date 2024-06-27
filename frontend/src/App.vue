@@ -12,5 +12,3 @@ const router = useRouter();
   </div>
 </template>
 
-
-//ent se eu quiser dar espaço aqui:
