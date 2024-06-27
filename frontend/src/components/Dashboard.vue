@@ -86,7 +86,7 @@ getData()
 
 </script>
 <template lang="">
-    <div class="flex justify-center p-4 overflow-scroll box-border">
+    <div class="flex justify-center p-4 overflow-y-scroll box-border">
         <div class="flex flex-col flex-wrap sm:min-w-[620px] m-auto box-border">
             <Card v-for="entry in data" :entry="entry" class="m-4"/>
         </div>
