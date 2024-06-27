@@ -14,8 +14,6 @@
 #define ReedSwitch_3 26
 #define ReedSwitch_4 27
 
-DHT dht(DHTPIN, DHTTYPE);
-
 const int gasSensorPin = 27; // Pino analógico onde o sensor está conectado
 const int buzzerPin = 26; // Pino digital onde o buzzer está conectado
 const int threshold = 4000; // Limite de detecção de gás, ajuste conforme necessário
@@ -23,6 +21,7 @@ const int hallPin = 2; // Pino onde o sensor de efeito Hall está conectado
 
 
 Adafruit_BMP280 bmp;
+DHT dht(DHTPIN, DHTTYPE);
 
 
 // WiFi parameters to be configured
@@ -134,7 +133,10 @@ char* readGasLevel() {
   } else {
     noTone(buzzerPin); // Desligar o buzzer se o nível de gás estiver abaixo do limite
   }
-  return String(gasLevel);
+  if(gasLevel > 4000){
+    return "Mau";
+  }
+  return "Bom";
 }
 
 // Wind direction
