@@ -80,7 +80,7 @@ void setup(void) {
 void countPulse() { pulseCount++; } // O incremento tem que ser uma callback function para o attachInterrupt
 
 // TEMPERATURA
-char* readTemperature() {
+String readTemperature() {
   float temperature = bmp.readTemperature();
   Serial.print("Read temperature from sensor: ");
   Serial.println(temperature);
@@ -89,7 +89,7 @@ char* readTemperature() {
 
 // UMIDADE RELATIVA
 
-char* readHumidity() {
+String readHumidity() {
   float humidity = dht.readHumidity();
   Serial.print("Read humidity from sensor: ");
   Serial.println(humidity);
@@ -97,7 +97,7 @@ char* readHumidity() {
 }
 
 // PRESSÃO
-char* readPressure() {
+String readPressure() {
   float pressure = bmp.readPressure() / 100.0F; // Converte para hPa
   float seaLevelPressure = 1017.0; // Ajuste este valor conforme necessário
   pressure += (seaLevelPressure - 1013.25); // Ajusta com base na pressão ao nível do mar
@@ -107,7 +107,7 @@ char* readPressure() {
 }
 
 // ALTITUDE
-char* readAltitude(){
+String readAltitude(){
   float altitude = bmp.readAltitude(1017.9);
   Serial.print("Read altitude from sensor: ");
   Serial.println(altitude);
@@ -115,7 +115,7 @@ char* readAltitude(){
 }
 
 // GÁS
-char* readGasLevel() {
+String readGasLevel() {
   int gasLevel = analogRead(gasSensorPin); // Ler valor do sensor de gás
   Serial.print("Read gas level from sensor: ");
   Serial.println(gasLevel);
@@ -134,13 +134,13 @@ char* readGasLevel() {
     noTone(buzzerPin); // Desligar o buzzer se o nível de gás estiver abaixo do limite
   }
   if(gasLevel > 4000){
-    return "Mau";
+    return String("Mau");
   }
-  return "Bom";
+  return String("Bom");
 }
 
 // Wind direction
-char* readWindDirection(){
+String readWindDirection(){
 
   int estadoReedSwitch1 = digitalRead(ReedSwitch_1);
   int estadoReedSwitch2 = digitalRead(ReedSwitch_2);
@@ -149,25 +149,25 @@ char* readWindDirection(){
 
   if (estadoReedSwitch1 == HIGH) {
     Serial.println("Direção detetada: Norte");
-    return "Norte";
+    return String("Norte");
   }
   if (estadoReedSwitch2 == HIGH) {
     Serial.println("Direção detetada: Oeste");
-    return "Oeste";
+    return String("Oeste");
   }
   if (estadoReedSwitch3 == HIGH) {
     Serial.println("Direção detetada: Sul");
-    return "Sul";
+    return String("Sul");
   }
   if (estadoReedSwitch4 == HIGH) {
     Serial.println("Direção detetada: Este");
-    return "Este";
+    return String("Este");
   }
-  return "";
+  return String("");
 }
 
 // Wind speed
-char* readWindSpeed(unsigned long lastTime){
+String readWindSpeed(unsigned long lastTime){
   unsigned long currentTime = millis(); // Tempo atual
   float windSpeed = 0.0;
 
@@ -179,11 +179,11 @@ char* readWindSpeed(unsigned long lastTime){
   if(windSpeed >= 0){
     return String(windSpeed);
   }
-  return "";
+  return String("");
 }
 
 
-void sendData(HTTPClient *http, char* type, char* value) {
+void sendData(HTTPClient *http, char* type, String value) {
   if(value == "") { return; }
 
   String jsonPayload = "{\"type\":\"" + type + "\",\"sensor\":\"" + DEVICE_CODE  + "\",\"value\":" + value +"}";
